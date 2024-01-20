@@ -8,7 +8,7 @@
   "num_lr_decays": 2,
   "local_scaler_type": "minmax",
   "early_stopping": true,
-  "use_exogenous": false,
+  "use_exogenous": true,
   "trainer_kwargs": {"accelerator": "gpu"},
   "random_state": 0
   
