@@ -32,20 +32,19 @@ class Forecaster:
         self,
         data_schema: ForecastingSchema,
         history_forecast_ratio: int = None,
-        context_forecast_ratio: float = None,
-        kernel_size: int = 2,
+        context_forecast_ratio: float = 4,
+        kernel_size: int = 3,
         dilations: List[int] = [1, 2, 4, 8, 16],
-        encoder_hidden_size: int = 200,
+        encoder_hidden_size: int = 30,
         encoder_activation: str = "ReLU",
-        context_size: int = 10,
-        decoder_hidden_size: int = 200,
+        decoder_hidden_size: int = 30,
         decoder_layers: int = 2,
-        max_steps: int = 1000,
-        learning_rate: float = 0.001,
+        max_steps: int = 500,
+        learning_rate: float = 1e-3,
         num_lr_decays: int = -1,
-        batch_size: int = 32,
+        batch_size: int = 64,
         early_stopping: bool = False,
-        early_stop_patience_steps: int = 50,
+        early_stop_patience_steps: int = 5,
         min_delta: float = 0.0005,
         local_scaler_type: str = None,
         use_exogenous: bool = True,
@@ -76,8 +75,6 @@ class Forecaster:
             encoder_hidden_size (int): Units for the TCN's hidden state size.
 
             encoder_activation (str): Type of TCN activation from tanh or relu.
-
-            context_size (int): Size of context vector for each timestamp on the forecasting window.
 
             decoder_hidden_size (int): Size of hidden layer for the MLP decoder.
 
@@ -112,7 +109,6 @@ class Forecaster:
         self.dilations = dilations
         self.encoder_hidden_size = encoder_hidden_size
         self.encoder_activation = encoder_activation
-        self.context_size = context_size
         self.decoder_hidden_size = decoder_hidden_size
         self.decoder_layers = decoder_layers
         self.max_steps = max_steps
@@ -131,10 +127,9 @@ class Forecaster:
                 self.data_schema.forecast_length * history_forecast_ratio
             )
 
-        if context_forecast_ratio:
-            self.context_size = int(
-                context_forecast_ratio * self.data_schema.forecast_length
-            )
+        self.context_size = int(
+            context_forecast_ratio * self.data_schema.forecast_length
+        )
 
         stopper = EarlyStopping(
             monitor="train_loss",
@@ -328,6 +323,7 @@ class Forecaster:
                 num_lr_decays=self.num_lr_decays,
                 batch_size=self.batch_size,
                 random_seed=self.random_state,
+                num_workers_loader=1,
                 **self.trainer_kwargs,
             )
         ]
